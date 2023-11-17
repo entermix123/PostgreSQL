@@ -1,0 +1,44 @@
+1. Count Employees by Town
+
+Create a function fn_count_employees_by_town(town_name) that accepts town_name VARCHAR(20) as a parameter and returns the count of employees living there.
+
+Example
+The following example is for employees living in "Sofia".
+count
+3
+
+
+2. Employees Promotion
+
+Create a stored procedure sp_increase_salaries(department_name) to increase the salary of all employees working at a given department (provided as a parameter). Increase salaries by 5%.
+
+Example
+The following example is given with employees in the "Finance" department ordered by first_name, then by salary.
+first_name salary
+Barbara 27720.0000
+Bryan 19950.0000
+Candy 19950.0000
+… …
+
+
+3. Employees Promotion by ID
+
+Create a stored procedure(transaction) sp_increase_salary_by_id(id) that increases a given employee's salary (by id as a parameter) by 5%. Consider that you cannot promote an employee who doesn't exist – if that happens, no changes to the database shall be made.
+
+Example
+The following example is given with employee_id = 17.
+salary
+14175.0000
+
+
+4. Triggered
+
+Create a table deleted_employees(employee_id PK, first_name, last_name, middle_name, job_title, deparment_id, salary) that will hold information about fired (deleted) employees from the employees table. Add a trigger to the employees table that inserts the corresponding information into deleted_employees table.
+▪ deleted_employees table:
+o employee_id – primary key
+o first_name - max-length 20
+o last_name - max-length 20
+o middle_name - max-length 20
+o job_title – max-length 50
+o department_id – integer
+o salary – numeric (19,4)

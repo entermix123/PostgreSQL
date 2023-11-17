@@ -1,0 +1,1 @@
+CREATE DATABASE soccer_talent_db;

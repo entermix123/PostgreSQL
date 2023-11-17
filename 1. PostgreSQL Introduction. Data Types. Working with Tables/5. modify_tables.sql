@@ -1,0 +1,2 @@
+ALTER TABLE table_name
+ALTER COLUMN middle_name TYPE VARCHAR(100);

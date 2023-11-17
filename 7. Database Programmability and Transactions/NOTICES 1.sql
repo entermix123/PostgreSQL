@@ -1,0 +1,11 @@
+CREATE OR REPLACE FUNCTION fn_test_func(first_name VARCHAR)
+RETURNS INT AS
+$$
+BEGIN
+    RAISE NOTICE '%', first_name;
+    RETURN NULL;
+END;
+$$
+LANGUAGE plpgsql;
+
+SELECT fn_test_func('Divak');	--ON OUTPUT TAB WE CAN SEE PRINTED NOTICE
