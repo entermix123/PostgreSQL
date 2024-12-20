@@ -1,0 +1,266 @@
+CONTENT:
+
+
+1. Database Design
+2. Table Relations
+3. JOINs
+4. Cascade Operations
+5. E/R Diagrams
+
+
+
+==================
+1. Database Design
+==================
+
+
+
+
+==================
+2. Table Relations
+==================
+STEPS:
+1 Identification of the entities
+example:
+- internet store:
+	- clients: 	id, first_name, last_name, email, city, street
+	- products:	id, description, price, quantity
+	- orders:	id, owner, date, state, 
+
+2 Defining table columns
+
+
+3 Defining primary keys
+- unique
+- int preferable
+
+4 Modeling relationships
+- one to one, one to many, many to many
+
+5 Defining constraints
+- can we have NULL and which colums are able to be NULL
+
+6 Filling test data
+- test before production
+
+* без повтаряне на данни
+* уникални идентификатори
+* NULL само където е необходимо
+* Интеграция на референциите
+* Atomic data - задаваме всичката необходима инфомрация, но не повече!
+* Правилен подбор на данни
+* Индексация
+* Access control
+
+==================
+3. JOINs
+==================
+
+
+
+
+
+==================
+4. Cascade Operations
+==================
+
+
+ON DELETE CASCADE
+-----------------------------------------------------
+CREATE TABLE mountains(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50)
+	);
+
+CREATE TABLE peaks(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50),
+	mountain_id INT,
+	CONSTRAINT fk_mountain_id
+		FOREIGN KEY (mountain_id)
+			REFERENCES mountains(id)
+		    ON DELETE CASCADE
+	);
+-----------------------------------------------------
+
+
+ON UPDATE CASCADE
+-----------------------------------------------------
+CREATE TABLE drivers(
+	driver_id INT PRIMARY KEY,
+	driver_name VARCHAR(50)
+	);
+CREATE TABLE cars(
+	car_id INT PRIMARY KEY,
+	driver_id INT,
+	CONSTRAINT fk_car_driver FOREIGN KEY(driver_id)
+	REFERENCES drivers(driver_id) ON UPDATE CASCADE
+	);
+-----------------------------------------------------
+
+
+
+==================
+5. E/R Diagrams
+==================
+
+
+
+
+
+
+LAB
+
+1. Mountains and Peaks
+
+OPTION 1
+-----------------------------------------------------
+CREATE TABLE mountains(
+	id INT GENERATED ALWAYS AS IDENTITY UNIQUE,
+	name VARCHAR(50) NOT NULL
+	);
+CREATE TABLE peaks(
+	id INT GENERATED ALWAYS AS IDENTITY UNIQUE,
+	name VARCHAR(50) NOT NULL,
+	mountain_id INT,
+	CONSTRAINT fk_peaks_mountains
+		FOREIGN KEY (mountain_id)
+			REFERENCES mountains(id)
+	);
+-----------------------------------------------------
+
+OPTION 2
+-----------------------------------------------------
+CREATE TABLE mountains(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50)
+	);
+	
+CREATE TABLE peaks(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50),
+	mountain_id INT,
+	CONSTRAINT fk_peaks_mountains
+		FOREIGN KEY (mountain_id)
+			REFERENCES mountains(id)
+	);
+-----------------------------------------------------
+
+OPTION 3 - ADD FOREIGN KEY TO EXISTING TABLE
+-----------------------------------------------------
+CREATE TABLE mountains(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50)
+	);
+	
+CREATE TABLE peaks(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50),
+	mountain_id INT
+	);
+	
+ALTER TABLE peaks
+ADD CONSTRAINT fk_peaks_mountains
+	FOREIGN KEY (mountain_id)
+		REFERENCES mountains(id);
+-----------------------------------------------------
+
+
+HOW TO CREATE MANY-TO-MANY WITH COMPOSITE PRIMARY KEY:
+-----------------------------------------------------
+SELECT
+	concat(m.first_name, m.last_name),
+	men_id,
+	women_id,
+	concat(w.first_name, w.last_name)
+FROM
+	men as m JOIN men_women			-- create men_women additional field as composite key
+	ON
+	m.id = men_women.men_id
+		JOIN women as w
+		ON
+		men_women.women_id = w.id
+-----------------------------------------------------
+
+
+
+2. Trip Organization
+-----------------------------------------------------
+SELECT
+	v.driver_id,
+	v.vehicle_type,
+	CONCAT(c.first_name, ' ', c.last_name) AS driver_name
+FROM
+	vehicles AS v
+	JOIN
+	campers as c
+	ON
+	v.driver_id = c.id
+-----------------------------------------------------
+
+
+
+3. SoftUni Hiking
+-----------------------------------------------------
+SELECT
+	r.start_point,
+	r.end_point,
+	r.leader_id,
+	concat(c.first_name, ' ', c.last_name)
+FROM
+    campers as c
+    JOIN
+    routes as r
+    ON
+    r.leader_id = c.id
+-----------------------------------------------------
+
+
+4. Delete Mountains
+-----------------------------------------------------
+CREATE TABLE mountains(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50)
+	);
+
+CREATE TABLE peaks(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50),
+	mountain_id INT,
+	CONSTRAINT fk_mountain_id
+		FOREIGN KEY (mountain_id)
+			REFERENCES mountains(id)
+		    ON DELETE CASCADE
+	);
+-----------------------------------------------------
+
+
+5. Project Management DB*
+-----------------------------------------------------
+CREATE TABLE clients(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(10)
+	);
+
+CREATE TABLE projects (
+    id SERIAL PRIMARY KEY,
+    project_lead_id INT UNIQUE ,
+    CONSTRAINT client_id FOREIGN KEY(id)
+    REFERENCES clients(id)
+    );
+
+CREATE TABLE employees (
+    id SERIAL PRIMARY KEY,
+    first_name VARCHAR(30),
+    last_name VARCHAR(30),
+    CONSTRAINT project_id FOREIGN KEY(id)
+    REFERENCES projects(id),
+    CONSTRAINT id FOREIGN KEY(id)
+    REFERENCES projects(project_lead_id)
+    );
+-----------------------------------------------------
+
+
+-----------------------------------------------------
+
+-----------------------------------------------------
