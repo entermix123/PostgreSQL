@@ -1,0 +1,392 @@
+0. Create databaase:
+-----------------------------------------------------
+CREATE DATABASE taxi_db;
+-----------------------------------------------------
+
+
+1. Database Design
+-----------------------------------------------------
+CREATE TABLE addresses(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+
+CREATE TABLE categories(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(10) NOT NULL
+);
+
+
+CREATE TABLE clients(
+    id SERIAL PRIMARY KEY,
+    full_name VARCHAR(50) NOT NULL,
+    phone_number VARCHAR(20) NOT NULL
+);
+
+
+CREATE TABLE drivers(
+    id SERIAL PRIMARY KEY,
+    first_name VARCHAR(30) NOT NULL,
+    last_name VARCHAR(30) NOT NULL,
+    age INT NOT NULL,
+    rating NUMERIC(3, 2) DEFAULT 5.5,
+
+    CONSTRAINT ck_drivers_age
+    CHECK (age > 0)
+);
+
+
+CREATE TABLE cars(
+    id SERIAL PRIMARY KEY,
+    make VARCHAR(20) NOT NULL,
+    model VARCHAR(20),
+    year INT NOT NULL DEFAULT 0,            --POSITIVE
+    mileage INT DEFAULT 0,                  --POSITIVE
+    condition CHAR(1) NOT NULL,
+    category_id INT NOT NULL,               --RELATION TO CATEGORIES(ID) CASCADE
+
+    CONSTRAINT ck_cars_year
+    CHECK ( year > 0 ),
+
+    CONSTRAINT ck_cars_mileage
+    CHECK ( mileage > 0 ),
+
+    CONSTRAINT fk_cars_categories
+    FOREIGN KEY (category_id)
+    REFERENCES categories(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
+);
+
+
+CREATE TABLE courses(
+    id SERIAL PRIMARY KEY,
+    from_address_id INT NOT NULL,           --RELATIONS TO ADDRESSES(ID) CASCADE
+    start TIMESTAMP NOT NULL,
+    bill NUMERIC(10, 2) DEFAULT 10,         --POSITIVE
+    car_id INT NOT NULL,                    --RELATIONS TO CARS(ID) CASCADE
+    client_id INT NOT NULL,                 --RELATIONS TO CLIENTS(ID) CASCADE
+
+    CONSTRAINT fk_courses_addresses
+    FOREIGN KEY (from_address_id)
+    REFERENCES addresses(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE,
+
+    CONSTRAINT ck_courses_bill
+    CHECK ( bill > 0 ),
+
+    CONSTRAINT fk_courses_cars
+    FOREIGN KEY (car_id)
+    REFERENCES cars(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE,
+
+    CONSTRAINT fk_courses_clients
+    FOREIGN KEY (client_id)
+    REFERENCES clients(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
+);
+
+
+CREATE TABLE cars_drivers(
+    car_id INT NOT NULL,                    --RELATIONS TO CARS(ID) CASCADE
+    driver_id INT NOT NULL,                 --RELATIONS TO DRIVERS(ID) CASCADE
+
+    CONSTRAINT fk_cars_drivers_cars
+    FOREIGN KEY (car_id)
+    REFERENCES cars(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE,
+
+
+    CONSTRAINT fk_cars_drivers_drivers
+    FOREIGN KEY (driver_id)
+    REFERENCES drivers(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
+);
+-----------------------------------------------------
+
+
+INSERT DATA FROM dataset.sql FILE !!!!
+
+
+
+2. Insert
+-----------------------------------------------------
+INSERT INTO clients (full_name, phone_number)
+SELECT
+    CONCAT(d.first_name, ' ', d.last_name) AS full_name,
+    CONCAT('(088) 9999', d.id * 2) AS phone_number
+FROM
+    drivers AS d
+WHERE
+    d.id BETWEEN 10 AND 20
+-----------------------------------------------------
+
+
+
+3. Update
+-----------------------------------------------------
+UPDATE cars
+SET condition = 'C'
+WHERE
+    (mileage > 800000
+    OR
+    mileage IS NULL)
+    AND
+    year <= 2010
+    AND
+    make <> 'Mercedes-Benz';
+-----------------------------------------------------
+
+
+
+4. Delete
+-----------------------------------------------------
+DELETE FROM
+    clients
+WHERE
+    LENGTH(full_name) > 3
+    AND
+    id NOT IN (
+        SELECT 
+            client_id
+        FROM
+            courses
+        );
+-----------------------------------------------------
+
+
+
+CLOSE SESSIONS AND QUERY TOOLS OVER taxi_db
+DROP DATABASE taxi_db
+CREATE DATABASE taxi_db
+CREATE TABLES - PROBLEM 1
+INSERT DATA FROM dataset.sql FILE
+
+
+
+5. Cars
+-----------------------------------------------------
+SELECT
+    make,
+    model,
+    condition
+FROM
+    cars
+ORDER BY
+    id
+-----------------------------------------------------
+
+
+
+6. Drivers and Cars
+-----------------------------------------------------
+SELECT
+    d.first_name,
+    d.last_name,
+    c.make,
+    c.model,
+    c.mileage
+FROM
+    cars AS c
+JOIN
+    cars_drivers AS cd
+ON c.id = cd.car_id
+JOIN
+    drivers AS d
+ON cd.driver_id = d.id
+WHERE
+    c.mileage IS NOT NULL
+ORDER BY
+    mileage DESC,
+    d.first_name ASC
+-----------------------------------------------------
+
+
+
+7. Number of Courses for Each Car
+-----------------------------------------------------
+SELECT
+    c.id as car_id,
+    c.make,
+    c.mileage,
+    COUNT(co.id) AS count_of_courses,
+    ROUND(AVG(co.bill), 2) AS average_bill
+FROM
+    cars AS c
+LEFT JOIN
+    courses AS co
+ON c.id = co.car_id
+GROUP BY
+    c.id
+HAVING
+    COUNT(co.id) <> 2
+ORDER BY
+    count_of_courses DESC,
+    c.id ASC
+-----------------------------------------------------
+
+
+
+8. Regular Clients
+-----------------------------------------------------
+SELECT
+    cl.full_name,
+    COUNT(c.car_id) AS count_of_cars,
+    SUM(c.bill) AS total_sum
+FROM
+    clients AS cl
+JOIN
+    courses AS c
+ON cl.id = c.client_id
+WHERE
+    SUBSTRING(cl.full_name, 2, 1) LIKE 'a'
+GROUP BY
+    cl.full_name
+HAVING
+    COUNT(c.car_id) > 1
+ORDER BY
+    cl.full_name
+-----------------------------------------------------
+
+
+
+9. Full Information of Courses
+-----------------------------------------------------
+SELECT
+    a.name AS address,
+    CASE
+        WHEN EXTRACT (HOUR FROM co.start) BETWEEN 6 AND 20 THEN 'Day'
+        ELSE 'Night'
+    END AS day_time,
+    co.bill,
+    cl.full_name,
+    cr.make,
+    cr.model,
+    ct.name AS category_name
+FROM
+    courses AS co
+JOIN
+    clients AS cl
+ON co.client_id = cl.id
+JOIN
+    cars AS cr
+ON co.car_id = cr.id
+JOIN
+    categories AS ct
+ON cr.category_id = ct.id
+JOIN
+    addresses AS a
+ON co.from_address_id = a.id
+ORDER BY
+    co.id ASC;
+-----------------------------------------------------
+
+
+
+10. Find all Courses by Client’s Phone Number
+-----------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_courses_by_client(
+    phone_num varchar(20)
+) RETURNS INT AS
+$$
+DECLARE
+    number_of_courses INT;
+BEGIN
+    number_of_courses := (
+    SELECT
+        count(co.id)
+    FROM
+        courses AS co
+    JOIN
+        clients AS cl
+    ON co.client_id = cl.id
+    WHERE
+        cl.phone_number = phone_num
+    );
+    RETURN number_of_courses;
+END;
+$$
+LANGUAGE plpgsql;
+
+SELECT fn_courses_by_client('(803) 6386812');   --RESULT: 5
+
+SELECT fn_courses_by_client('(831) 1391236');   --RESULT: 3
+
+SELECT fn_courses_by_client('(704) 2502909');   --RESULT: 0
+-----------------------------------------------------
+
+
+
+11. Full Info for Address
+-----------------------------------------------------
+CREATE TABLE search_results (
+id SERIAL PRIMARY KEY,
+address_name VARCHAR(50),
+full_name VARCHAR(100),
+level_of_bill VARCHAR(20),
+make VARCHAR(30),
+condition CHAR(1),
+category_name VARCHAR(50)
+);
+
+CREATE OR REPLACE PROCEDURE sp_courses_by_address(
+    IN address_name varchar(100)
+)AS
+$$
+BEGIN
+    Truncate search_results;
+    INSERT INTO search_results(
+        address_name,
+        full_name,
+        level_of_bill,
+        make,
+        condition,
+        category_name
+    )
+    SELECT
+        ad.name,
+        cl.full_name,
+        CASE
+            WHEN co.bill <= 20 THEN 'Low'
+            WHEN co.bill <= 30 THEN 'Medium'
+            ELSE 'High'
+        END,
+        cr.make,
+        cr.condition,
+        ct.name AS category_name
+    FROM
+        addresses AS ad
+    JOIN
+        courses AS co
+    ON ad.id = co.from_address_id
+    JOIN
+        cars AS cr
+    ON co.car_id = cr.id
+    JOIN
+        categories AS ct
+    ON cr.category_id = ct.id
+    JOIN
+        clients AS cl
+    ON co.client_id = cl.id
+    WHERE
+        ad.name = address_name
+    ORDER BY
+        cr.make ASC,
+        cl.full_name ASC;
+END;
+$$
+LANGUAGE plpgsql;
+
+
+--CALL sp_courses_by_address('66 Thompson Drive');
+
+--SELECT * FROM search_results;
+-----------------------------------------------------
+
+
