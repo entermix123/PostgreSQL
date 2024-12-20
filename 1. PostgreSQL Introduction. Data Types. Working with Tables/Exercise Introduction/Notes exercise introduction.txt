@@ -1,0 +1,342 @@
+PostgreSQL - DB
+PGAdmin - DB Browser
+DataGrip - DB Browser for all DBs
+
+Install Docker --> https://www.docker.com/
+
+Install PostgreSQL:
+
+terminal --> docker run -p 5432:5432 -e POSTGRES_USER=postgres-user -e POSTGRES_PASSWORD=password -d -v my-postgres-data:/var/lib/postgresql/data --name custom-name postgres:latest
+
+
+Install PgAdmin:
+
+terminal --> docker run -p 5050:80 -e PGADMIN_DEFAULT_EMAIL=some@email.com -e PGADMIN_DEFAULT_PASSWORD=password -v my-data:/var/lib/pgadmin -d dpage/pgadmin4
+
+
+SQL Logical Divisions:
+
+DDL(data definition language) - create, alter, drop, trunkate
+DML(data manipulation language) - select, insert, update, delete
+DCL(data control language) - grant, revoke, deny
+TCL(transaction control language) - begin tran, commit, rollback, save
+
+DDL:
+CREATE - create table
+ALTER - change table
+DROP - erase table
+TRUNKATE - delete all data in the table wxcept the table
+
+DML:
+SELECT - gather data from table
+INSERT - insert data in table
+UPDATE - change data in table
+DELETE - delete data in table
+
+DCL:
+GRANT - give rights to user
+REVOKE - remove rights from user
+DENY - restrict user rights
+
+TCL:
+BEGIN TRAN - start changes
+COMMIT - confirm changes
+ROLLBACK - revert changes
+SAVE - save changes
+
+
+Types data:
+
+INFO: https://wiki.ispirer.com/sqlways/mysql/data-types/nvarchar_n
+
+real type is less memory
+double type is more memory but more precise
+
+=======================================================================================
+We can see table relations details when click right the table button and choose ERD (entity relational diagram) for the table.
+=======================================================================================
+
+
+Create DATABASE:
+
+1. Right click on default database - postgres and choose Query Tool
+2. CREATE DATABASE minions_db;
+3. Execute or F5
+
+
+
+Create tables:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS minions(
+	id serial PRIMARY KEY
+	,"name" VARCHAR(30)
+	,age INT
+ 	);
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Tables
+
+
+
+Rename table:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+ALTER TABLE minions
+RENAME TO minions_info;
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Tables
+
+
+
+Alter table:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+ALTER TABLE minions_info
+ADD code char(4)
+,ADD task TEXT
+,ADD salary NUMERIC(8,3)
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Tables
+
+
+
+Rename column:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+ALTER TABLE minions_info
+RENAME COLUMN salary TO banana;
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Tables
+
+
+Add columns:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+ALTER TABLE minions_info
+ADD email VARCHAR(20)
+,ADD equipped BOOLEAN DEFAULT FALSE NOT NULL
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Tables
+
+
+Create custom ENUM Type (CHOICE)
+
+1. Connect to Database and open Query Tool
+ - create type_mood type choice
+ - add column with this type data - type_mood
+------------------------------------------------------------------------
+CREATE TYPE type_mood
+AS ENUM (
+	'happy',
+	'relaxed',
+	'stressed',
+	'sad'
+	);
+
+ALTER TABLE minions_info
+ADD COLUMN mood type_mood;
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Tables
+
+
+
+Create custom ADDRESS Type
+
+1. Connect to Database and open Query Tool
+ - create address type field
+ - create table and add colimn with this type of field
+ - add entity to the table
+------------------------------------------------------------------------
+CREATE TYPE address AS (
+	street TEXT,
+	city TEXT,
+	postalCode CHAR(4)
+	);
+
+CREATE TABLE customer (
+	id SERIAL PRIMARY KEY,
+	customer_name TEXT,
+	customer_address address
+	);
+	
+INSERT INTO customer (customer_name, customer_address)
+VALUES ('Danio', ('some street', 'some_town', '1616'))
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Tables
+
+
+
+Set Default:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+ALTER TABLE minions_info
+ALTER COLUMN age SET DEFAULT(0),
+ALTER COLUMN "name" SET DEFAULT '',
+ALTER COLUMN code SET DEFAULT '';
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Tables
+
+
+
+Add constraints:
+
+EXAMPLE:
+
+ALTER TABLE <table_name>
+ADD CONSTRAINT <constraint_name> <constraint_definition> (<column1>, <column2>,
+... <column_n>);
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+-- ALTER TABLE minions_info
+-- ADD CONSTRAINTS UQ_name_and_id
+-- UNIQUE (id, "name"),
+
+-- ADD CONSTRAINTS CK_banana_is_positive_number
+-- CHECK (banana > 0)
+
+ALTER TABLE minions_info
+
+ADD CONSTRAINT unique_containt
+UNIQUE (id, email),
+
+ADD CONSTRAINT banana_check
+CHECK (banana > 0);
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Tables
+
+
+
+Change Column’s Data Type:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+ALTER TABLE minions_info
+ALTER COLUMN task TYPE VARCHAR(150)
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Tables
+
+
+Drop Constraint:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+ALTER TABLE minions_info
+ALTER COLUMN equipped 
+DROP Not NULL
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Table
+
+
+Remove column:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+ALTER TABLE minions_info
+DROP COLUMN age 
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Table
+
+
+
+Create Table:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+CREATE TABLE minions_birthdays (
+	id INTEGER UNIQUE NOT NULL,
+	name VARCHAR(50),
+	date_of_birth DATE,
+	age INTEGER,
+	present VARCHAR(100),
+	party TIMESTAMPTZ
+);
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Table
+
+
+Insert Into Table:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+INSERT INTO minions_info 
+	(name,	code, task,	banana, email, equipped, mood)
+VALUES
+	('Mark', 'GKYA', 'Graphing Points', 3265.265, 'mark@minion.com', false, 'happy'),
+	('Mel', 'HSK', 'Science Investigation', 54784.996, 'mel@minion.com', true, 'stressed'),
+	('Bob', 'HF', 'Painting', 35.652, 'bob@minion.com', true, 'happy'),
+	('Darwin', 'EHND', 'Create a Digital Greeting', 321.958, 'darwin@minion.com', false, 'relaxed'),
+	('Kevin', 'KMHD', 'Construct with Virtual Blocks', 35214.789, 'kevin@minion.com', false, 'happy'),
+	('Norbert', 'FEWB', 'Testing', 3265.500, 'norbert@minion.com', true, 'sad'),
+	('Donny', 'L', 'Make a Map', 8.452, 'donny@minion.com', true, 'happy');
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Table
+
+
+
+Select:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+SELECT 
+	name, 
+	task, 
+	email, 
+	banana 
+FROM minions_info
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Table
+
+
+
+Truncate table:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+TRUNCATE TABLE minions_info;
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Table
+
+
+Drop table:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+DROP TABLE minions_birthdays;
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas/Table
+
+
+Drop DATABASE:
+
+1. Connect to different Database and open Query Tool
+------------------------------------------------------------------------
+DROP DATABASE minions_db WITH (FORCE);
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh SERVER
+
+
