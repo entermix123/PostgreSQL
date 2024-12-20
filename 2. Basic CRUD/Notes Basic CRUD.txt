@@ -1,0 +1,559 @@
+PostgreSQL - DB
+PGAdmin - DB Browser
+DataGrip - DB Browser for all DBs
+
+Install Docker --> https://www.docker.com/
+
+Install PostgreSQL:
+
+terminal --> docker run -p 5432:5432 -e POSTGRES_USER=postgres-user -e POSTGRES_PASSWORD=password -d -v my-postgres-data:/var/lib/postgresql/data --name custom-name postgres:latest
+
+
+Install PgAdmin:
+
+terminal --> docker run -p 5050:80 -e PGADMIN_DEFAULT_EMAIL=some@email.com -e PGADMIN_DEFAULT_PASSWORD=password -v my-data:/var/lib/pgadmin -d dpage/pgadmin4
+
+
+SQL Logical Divisions:
+
+DDL(data definition language) - create, alter, drop, trunkate
+DML(data manipulation language) - select, insert, update, delete
+DCL(data control language) - grant, revoke, deny
+TCL(transaction control language) - begin tran, commit, rollback, save
+
+DDL:
+CREATE - create table
+ALTER - change table
+DROP - erase table
+TRUNKATE - delete all data in the table wxcept the table
+
+DML:
+SELECT - gather data from table
+INSERT - insert data in table
+UPDATE - change data in table
+DELETE - delete data in table
+
+DCL:
+GRANT - give rights to user
+REVOKE - remove rights from user
+DENY - restrict user rights
+
+TCL:
+BEGIN TRAN - start changes
+COMMIT - confirm changes
+ROLLBACK - revert changes
+SAVE - save changes
+
+
+Types data:
+
+INFO: 
+https://www.postgresql.org/docs/current/datatype.html
+https://wiki.ispirer.com/sqlways/mysql/data-types/nvarchar_n
+
+real type is less memory
+double type is more memory but more precise
+
+=======================================================================================
+We can see table relations details when click right the table button and choose ERD (entity relational diagram) for the table.
+=======================================================================================
+
+EXECUTION IN PGADMIN IS MADE WITH MARKED CODE! IF NO CODE IS MARKER, ALL THE CODE IN THE QUERY TOOL IS EXECUTED!
+
+AUTOCOMMMIT IS ALWAYS ON!
+
+Create DATABASE:
+
+1. Right click on default database - postgres and choose Query Tool
+2. CREATE DATABASE hotel;
+3. Execute or F5
+
+# ROLLBACK REVERT CHANGES MADE
+
+
+Exercise:
+Create table and person nad add 2 entities and visualize the data 
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+CREATE TABLE person (
+	id serial PRIMARY KEY,
+	first_name VARCHAR(20),
+	last_name VARCHAR(20)
+);
+	
+INSERT INTO person(first_name, last_name)
+VALUES
+	('Dimo', 'Kolev'),
+	('Lili', 'Petkova');
+
+
+SELECT * FROM person
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas
+
+
+CHANGE ID NUMBER BY INCREMENTINT IT BY 2 INSTEAD BY 1
+
+Create person_id_by_2_sequence in Schemas/Sequences:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+CREATE SEQUENCE person_id_by_2_sequence
+START 4
+INCREMENT 2
+OWNED BY person.id
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas
+4. Right click on person_id_by_2_sequence/peoperties/Definition, we can see the table that the sequence is connecteth with
+
+
+OWNED BY is used when the table is deleted, the sequence is deleted also na dod not use memory. Not used mandatory.
+
+
+Set the sequence for the table:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+ALTER TABLE person
+ALTER COLUMN id SET DEFAULT nextval('person_id_by_2_sequence');
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas
+
+
+add more entities and check the incrementation:
+
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+INSERT INTO person (first_name, last_name)
+VALUES
+	('Mara', 'Kirova'),
+	('Divak', 'Margarinski')
+
+SELECT * FROM person
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas
+
+
+HOW TO MAKE PRIMARY KEY
+
+Remove table_name/Constraints/person_pkey:
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+ALTER TABLE person
+DROP CONSTRAINT person_pkey
+
+SELECT * FROM public.person
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas
+
+
+Add new column and set it as primery key:
+1. Connect to Database and open Query Tool
+------------------------------------------------------------------------
+ALTER TABLE person
+ADD COLUMN new_id serial PRIMARY KEY
+-- ADD COLUMN new_id nextval('some_custom_sequence') PRIMARY KEY
+
+SELECT * FROM person
+------------------------------------------------------------------------
+2. Execute or F5
+3. Refresh Schemas
+
+
+
+
+
+
+
+PRESENTATION CONTENT
+
+1. Lexical structure in pgSQL		- ДИАЛЕКТЪТ pgSQL е за pgAdmin
+2. Retrieving data			- SELECT OPERATOR
+3. Data manipulation			- BASIC OPERATION
+	▪ Create, update, delete
+4. Views				- READY QUERY FORM READY FOR CALL (VIRTUAL TABLES OR FUNCTIONS LIKE IN PYTHON)
+
+
+
+
+1. Lexical structure in pgSQL		- ДИАЛЕКТЪТ pgSQL е за pgAdmin
+
+Strings are always in single quotes - 'string' !
+
+SELECT IS LIKE PRINT IN PYTHON
+SELECT 'print some text'
+
+IF WE HAVE KEY WORDS OR CAPITAL LETTERS FOR FILED NAMES, THEY ARE SPECIFIED WITH DOUBLE QUOTES - "" !
+EXAMPLE FILEDS: "select", "Full Name" etc.
+
+COMMENTS:
+
+-- comment
+
+/*
+coments
+coments
+*/
+
+Single line comment
+CREATE DATASABE db_name; -- comment
+
+Multiple line comments
+CREATE TABLE /* commentS */ ();
+
+
+
+2. Retrieving data - SELECT OPERATOR
+
+SELECT * FROM table_name	# give us all data from rable_name
+
+SELECT first_name, last_name FROM tabel_name 	# visualize first and last name from the table
+
+-----------------------------------------
+SELECT 
+	first_name AS custom_name,		# set the name of the column in the result to custom_name or "CUSTOM_NAME"
+	last_name
+FROM
+	table_name
+-----------------------------------------
+
+-----------------------------------------
+SELECT 
+	first_name AS "First Name",		# set the name of the column in the result to First Name
+	last_name AS "Last Name"		# set the name of the column in the result to Last Name
+FROM
+	table_name
+-----------------------------------------
+
+
+
+CONCATENATE: 	concat() 
+
+SELECT concat('some text', ' ', 'some more text')	result:	"some text some more text"
+
+ALIAS with names: 				# give us different names of the fealds
+
+-----------------------------------------
+SELECT 
+	p.first_name AS "First Name",		# set the name of the column in the result to First Name
+	p.last_name AS "Last Name"		# set the name of the column in the result to Last Name
+FROM
+	table_name as p				# give the table name - p
+-----------------------------------------
+
+
+EXAMPLES LAB:
+
+1. Select and Display Employee Information by Concatenating Columns
+
+Connect to Database and open Query Tool
+------------------------------------------------------------------------
+SELECT 
+	id,
+	concat(first_name, ' ',last_name) AS "Full Name",
+	job_title AS "Job Title"
+FROM employees
+------------------------------------------------------------------------
+
+
+LIMITATION:				# LIMIT THE ROWS TO SET NUMBER
+Connect to Database and open Query Tool
+------------------------------------------------------------------------
+SELECT 
+	id,
+	concat(first_name, ' ',last_name) AS "Full Name",
+	job_title AS "Job Title"
+FROM employees
+LIMIT 3 
+------------------------------------------------------------------------
+
+
+DISTINCT: 				# ELIMINATES DUPLICATES IN THE RESULT
+Connect to Database and open Query Tool
+------------------------------------------------------------------------
+SELECT 
+	DISTINCT ON (first_name) first_name,	--removes all duplicates with same first name and give us first match only
+	last_name,
+	salary
+FROM employees
+WHERE salary > 1000.00;
+
+SELECT DISTINCT first_name FROM employees;
+
+SELECT DISTINCT first_name, last_name FROM employees;
+
+SELECT DISTINCT ON (first_name) first_name, last_name FROM employees;
+------------------------------------------------------------------------
+
+
+
+2. Select Employees by Filtering and Ordering
+
+Connect to Database and open Query Tool
+------------------------------------------------------------------------
+SELECT 
+	id,
+	concat( first_name, ' ',last_name) AS full_name,
+	job_title, 
+	salary
+FROM employees
+WHERE salary > 1000.00			--SELECT IF SALATY IS HIGHER THAN 1000.00
+ORDER BY 				
+	id ASC				--ORDER BY ID, SORTED ASCENDING
+------------------------------------------------------------------------
+
+
+
+3. Select Employees by Multiple Filters
+
+Connect to Database and open Query Tool
+------------------------------------------------------------------------
+SELECT	
+	id,
+	first_name,
+	last_name,
+	job_title,
+	department_id,
+	salary
+FROM employees
+WHERE
+	department_id = 4
+	--department_id IN (1, 3, 4)	--multiple filters with IN and NOT IN key words
+	AND
+	salary >= 1000			--salary BETWEEN 1000 AND 1500
+	--OR
+	--MORE FILTERS
+ORDER BY 
+	id;
+------------------------------------------------------------------------
+
+
+CHECK FOR NULL FIELDS:
+
+Connect to Database and open Query Tool
+------------------------------------------------------------------------
+SELECT * FROM clients
+WHERE last_name IS NULL;
+--WHERE last_name IS NOT NULL
+
+SELECT first_name, room_id FROM clients
+WHERE last_name IS NULL;
+
+SELECT first_name, room_id FROM clients
+WHERE last_name IS NOT NULL;
+------------------------------------------------------------------------
+
+
+
+INSERT DATA INTO TABLES
+
+4. Insert Data into Employees Table
+
+Connect to Database and open Query Tool
+------------------------------------------------------------------------
+INSERT INTO employees 
+	(first_name, last_name, job_title, department_id, salary)
+VALUES
+	('Samantha', 'Young', 'Housekeeping', 4, '900'),
+	('Roger', 'Palmer', 'Waiter', 3, '928.33');
+	
+SELECT * FROM employees
+--RETURNING *			--RETURNING VISUALIZE ALL MADE CHANGES
+------------------------------------------------------------------------
+RETURNING IS USED WITH MANUAL COMMIT! RETURNING IS TO CHECK THE RESULT BEFORE COMMITMENT TO DB!
+
+
+INSERT DATA FROM ANOTHER TABLE:
+------------------------------------------------------------------------
+INSERT INTO table_name		--insert into table
+SELECT				--selected from eployees fields
+	first_name,
+	last_name
+FROM
+	employees;
+------------------------------------------------------------------------
+
+
+CREATE TABLE FROM SELECTION:
+------------------------------------------------------------------------
+CREATE TABLE table_name		--creaete table with
+AS
+SELECT				--selected from another table
+	first_name,
+	last_name
+FROM
+	employees;
+------------------------------------------------------------------------
+
+
+UPDATE DATA
+
+WHEN UPDATING DATA ALWAYS USE 'WHERE' KEY WORD. OTHERWAYS ALL DATA WILL BE UPDATED/CHANGED!
+
+5. Update Employees Salary
+
+Connect to Database and open Query Tool
+------------------------------------------------------------------------
+UPDATE employees
+SET salary = salary + 100
+WHERE job_title = 'Manager';
+
+SELECT * FROM employees
+WHERE job_title = 'Manager'
+------------------------------------------------------------------------
+
+
+Change all specific fileds:
+
+Change null fields:
+
+1. check for null values
+------------------------------------------------------------------------
+--find null fields
+--SELECT * FROM clients
+--WHERE last_name IS NULL;
+
+UPDATE clients                  --update fields
+SET last_name = 'Unknown'       --in column last_name
+WHERE last_name IS NULL;        --if it is NULL
+
+--check result
+--SELECT * FROM clients
+--WHERE last_name = 'Unknown';
+------------------------------------------------------------------------
+
+
+
+DELETEING DATA FROM TABLES:
+
+WHEN DELETING DATA ALWAYS USE 'WHERE' KEY WORD. OTHERWAYS ALL DATA WILL BE DELETED!
+
+
+6. Delete from Table
+
+Connect to Database and open Query Tool
+------------------------------------------------------------------------
+DELETE FROM employees
+WHERE department_id IN (1, 2);
+
+SELECT * FROM employees
+ORDER BY id
+------------------------------------------------------------------------
+
+
+
+VIEWS:
+
+VIRTUAL TABLES TAHT ARE USED TO SAVE COMPLEX QUERIES AND USE THEM MULTIPLE TIMES OR RESTRICT EMPLOYEES ACTION OVER THE DB.
+
+Example: Making a view for available quantities in the store and give rights to the store worker only to that view!
+
+
+CREATING VIEW:
+
+1. Make selection first and check if the result is as required.
+------------------------------------------------------------------------
+SELECT
+	concat(first_name, ' ', last_name) AS "Full Name",
+	department_id
+FROM
+	employees
+------------------------------------------------------------------------
+
+
+2. Add 'CREATE VIEW view_name AS' to create the view
+------------------------------------------------------------------------
+CREATE VIEW name_department_view AS
+SELECT
+	concat(first_name, ' ', last_name) AS "Full Name",
+	department_id
+FROM
+	employees
+------------------------------------------------------------------------
+VIEWS ARE SAVED IN SCHEMAS/VIEWS
+
+We can use views as extracts from DB without risk of changing the DB by mistake!
+
+
+3. check what view we have saved:
+------------------------------------------------------------------------
+SELECT * FROM name_department_view
+------------------------------------------------------------------------
+
+
+7. Create a View for Top Paid Employee
+
+Connect to Database and open Query Tool
+------------------------------------------------------------------------
+CREATE VIEW top_paid_employee
+AS
+SELECT 
+	id,
+	first_name,
+	last_name,
+	job_title,
+	department_id,
+	salary
+FROM employees
+ORDER BY salary DESC
+LIMIT 1;
+
+SELECT * FROM top_paid_employee
+------------------------------------------------------------------------
+
+
+
+
+ADDITIONAL:
+
+HOW TO INSERT COLUMN IN SPECIFIC PLACE IN TABLE:
+- create new table with added specific column
+- insert data from old table
+- set all NULL fields in the new table as 0
+
+Connect to Database and open Query Tool
+------------------------------------------------------------------------
+CREATE TABLE new_table			--create new table
+	id serial PRIMARY KEY,
+	age INT,			--insert age column between id and first_name columns
+	first_name VARCHAR(30),
+	last_name VARCHAR(30);
+
+INSERT INTO new_table (first_name, last_name)	--specify which columns we need to insert data in
+SELECT 
+	first_name,				--specify the columns we want the information from
+	last_name
+FROM old_table;
+
+UPDATE new_table				--update new table wuth default age value to 0
+SET age = 0
+WHERE age IS NULL;
+
+RETURNING *					--Check the changes made
+------------------------------------------------------------------------
+
+
+AUTOMATICALLY CREATED TABLES AT: https://mockaroo.com/
+
+EXCELENT FOR PRACTICE!
+
+1. SET FIELDS IN THE TABLE
+2. SET NUMNERS OF ROWS
+3. SET FORAMT TO SQL
+4. GIVE NAME TO THE TABLE
+5. CHECK include CREATE TABLE
+6. GENERATE DATA
+7. SAVE AND USE DATA
+
+
+
+
+
+
+
+
