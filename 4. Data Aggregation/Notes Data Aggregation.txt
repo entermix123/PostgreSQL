@@ -1,0 +1,310 @@
+TABLE OF CONTENT
+
+1. Grouping
+	▪ Consolidating data based on criteria
+2. Aggregate Functions
+	▪ COUNT, SUM, MAX, MIN, AVG …
+3. Having
+	▪ Using predicates while grouping
+4. Conditional Statements
+
+ALL SELECTED FIELDS MUST BE IN "GROUP BY" WITHOUT AGGREAGATIONS!!!
+
+
+===============================================
+1. Grouping						-- WORKING LIKE DISTINCT - set unique values in the field
+	▪ Consolidating data based on criteria
+===============================================
+
+Example:
+-----------------------------------------------
+SELECT 
+	column_one,
+	column_two
+FROM 
+	table_name
+GROUP BY 
+	column_one,
+	column_two;
+-----------------------------------------------
+
+
+
+===============================================
+2. Aggregate Functions
+	▪ COUNT, SUM, MAX, MIN, AVG …
+
+===============================================
+
+
+Example COUNT and NULL values:
+-----------------------------------------------
+SELECT 
+	gender,
+	count(*)	--count all gender + NULL values, if count(gender) NULL values will be 0
+FROM 
+	people_table
+GROUP BY 
+	gender
+ORDER BY
+	count(*) DESC;
+-----------------------------------------------
+
+
+Example: Use an "aggregate" function over each separate group:
+-----------------------------------------------
+SELECT 
+	column_one,
+	aggregate_function(column_two)
+FROM 
+	table_name
+GROUP BY 
+	column_one;
+-----------------------------------------------
+
+
+Example: Count the number of employees per department
+-----------------------------------------------
+SELECT 
+	"department_id",
+	COUNT("id") AS "employee_count"
+FROM 
+	"employees"
+GROUP BY 
+	"department_id"
+ORDER BY 
+	"department_id";
+-----------------------------------------------
+
+===============================================
+3. Having
+	▪ Using predicates while grouping
+===============================================
+
+▪ The HAVING clause is used to filter data based on aggregate values
+	▪ We cannot use it without grouping before that
+▪ Any Aggregate functions in the "HAVING" clause and in the "SELECT" statement are executed one time only
+▪ Unlike HAVING, the WHERE clause filters rows before the aggregation
+
+WHERE FILTERING THE AGGREAGATION DATA!
+
+HAVING IS FILTERING AGGREAGATED DATA!
+
+HAVING MUST BE BEFORE ORDER BY!
+
+
+
+
+FILTER GROUPED FIELDS BY AGGREAGATION FUNCTION:
+-----------------------------------------------
+SELECT 
+	"department_id",
+	SUM("salary") AS "Total Salary"
+FROM 
+	"employees"
+GROUP BY 
+	"department_id"
+	HAVING SUM("salary") < 4200
+ORDER BY 
+	"department_id";
+-----------------------------------------------
+
+
+===============================================
+4. Conditional Statements
+===============================================
+
+CASE Expression Simple Syntax
+-----------------------------------------------
+CASE expression
+	WHEN value_1 THEN result_1
+	WHEN value_2 THEN result_2
+	...
+ELSE result_n
+END AS column_name
+-----------------------------------------------
+
+
+SIMPLE CASE Syntax
+-----------------------------------------------
+CASE value > 12
+	WHEN TRUE THEN 'do something'
+ELSE result_n
+END AS column_name
+-----------------------------------------------
+
+
+CASE Expression in Aggregate Functions
+-----------------------------------------------
+SELECT 
+	SUM(salary) AS total_salaries,
+	SUM(CASE department_id		--increase salary according department id and calculate tptal money for the crease
+		WHEN 1 THEN salary*1.15	
+		WHEN 2 THEN salary*1.10
+		ELSE salary*1.05
+	END) AS total_increased_salaries
+FROM employees;
+-----------------------------------------------
+
+
+CASE Expression and GROUP BY
+-----------------------------------------------
+SELECT
+	CASE
+		WHEN category_id IN (1, 2, 3) THEN 'Starters'
+		WHEN category_id = 4 THEN 'Mains'
+		ELSE 'Desserts'
+	END AS "new product category",
+	COUNT(id)
+FROM products
+GROUP BY "new product category";
+-----------------------------------------------
+
+CASE Expression in HAVING
+-----------------------------------------------
+SELECT
+	CASE
+		WHEN salary < 1000 THEN 'Low (< 1000)'
+		WHEN salary <= 3000 THEN 'Middle (1000-3000)'
+		ELSE 'High (> 3000)'
+	END AS "salary_range",
+	COUNT(salary) AS "salary_count"
+FROM employees
+GROUP BY "salary_range"
+	HAVING CASE COUNT(salary)
+		WHEN 0 THEN 'false'::boolean
+		ELSE 'true'::boolean
+END;
+-----------------------------------------------
+
+
+
+
+Lab: Data Aggregation
+
+
+1. Departments Info (by id)
+-----------------------------------------------
+SELECT
+	department_id,
+	count(*)
+FROM 
+	employees
+GROUP BY
+	department_id
+ORDER BY
+	department_id
+-----------------------------------------------
+
+
+2. Departments Info (by salary)
+-----------------------------------------------
+SELECT
+	department_id,
+	count(salary) AS employee_count
+FROM
+	employees
+GROUP BY
+	department_id
+ORDER BY
+	department_id
+-----------------------------------------------
+
+
+
+3. Sum Salaries per Department
+-----------------------------------------------
+SELECT
+	department_id,
+	SUM(salary) AS total_salaries
+FROM
+	employees
+GROUP BY
+	department_id
+ORDER BY
+	department_id
+-----------------------------------------------
+
+
+
+4. Maximum Salary per Department
+-----------------------------------------------
+SELECT
+	department_id,
+	MAX(salary) max_salaries
+FROM
+	employees
+GROUP BY
+	department_id
+ORDER BY
+	department_id
+-----------------------------------------------
+
+
+
+5. Minimum Salary per Department
+-----------------------------------------------
+SELECT
+	department_id,
+	MIN(salary) min_salaries
+FROM
+	employees
+GROUP BY
+	department_id
+ORDER BY
+	department_id
+-----------------------------------------------
+
+
+
+6. Average Salary per Department
+-----------------------------------------------
+SELECT
+	department_id,
+	AVG(salary) avg_salary
+FROM
+	employees
+GROUP BY
+	department_id
+ORDER BY
+	department_id
+-----------------------------------------------
+
+
+
+7. Filter Total Salaries
+-----------------------------------------------
+SELECT
+	department_id,
+	SUM(salary) "Total Salary"
+FROM
+	employees
+GROUP BY
+	department_id
+	HAVING SUM(salary) < 4200
+ORDER BY
+	department_id
+-----------------------------------------------
+
+
+
+8. Department Names
+-----------------------------------------------
+SELECT 
+	id, 
+	first_name, 
+	last_name,
+	TRUNC(salary, 2) AS salary,
+	department_id,
+	CASE department_id
+		WHEN 1 THEN 'Management'
+		WHEN 2 THEN 'Kitchen Staff'
+		WHEN 3 THEN 'Service Staff'
+		ELSE 'Other'
+	END AS department_name
+FROM 
+	employees 
+ORDER BY 
+	id;
+-----------------------------------------------
+
