@@ -1,0 +1,138 @@
+PostgreSQL - DB
+PGAdmin - DB Browser for PostgresSQL
+DataGrip - DB Browser
+
+Install Docker --> https://www.docker.com/
+
+Install PostgreSQL:
+
+terminal --> docker run -p 5432:5432 -e POSTGRES_USER=postgres-user -e POSTGRES_PASSWORD=password -d -v my-postgres-data:/var/lib/postgresql/data --name custom-name postgres:latest
+
+
+Install PgAdmin:
+
+terminal --> docker run -p 5050:80 -e PGADMIN_DEFAULT_EMAIL=some@email.com -e PGADMIN_DEFAULT_PASSWORD=password -v my-data:/var/lib/pgadmin -d dpage/pgadmin4
+
+Connection instruction:
+
+When you first log in to pgAdmin, you will not have any connections to the database, and you will need to create one.
+Click on the icon "Add New Server".
+Open the Connection Tab and write down the host name (always "host.docker.internal"), port of the container (in this
+example is "5432"), the maintenance database is "postgres", your username and password which you chose when running 
+the PostgreSQL container (in this example "postgres-user" and "password"). Click "Save" to save the server:
+
+
+SQL Logical Divisions:
+
+DDL(data definition language) - create, alter, drop, trunkate
+DML(data manipulation language) - select, insert, update, delete
+DCL(data control language) - grant, revoke, deny
+TCL(transaction control language) - begin tran, commit, rollback, save
+
+DDL:
+CREATE - create table
+ALTER - change table
+DROP - erase table
+TRUNKATE - delete all data in the table wxcept the table
+
+DML:
+SELECT - gather data from table
+INSERT - insert data in table
+UPDATE - change data in table
+DELETE - delete data in table
+
+DCL:
+GRANT - give rights to user
+REVOKE - remove rights from user
+DENY - restrict user rights
+
+TCL:
+BEGIN TRAN - start changes
+COMMIT - confirm changes
+ROLLBACK - revert changes
+SAVE - save changes
+
+
+CREATE DATABASE:
+
+1. Star PostgreSQL and login to PgAdmin. 
+2. Right click on Databases and create Database - 'gamebar'
+
+CREATING TABLES:
+
+3. Go to Schemas/Tables, right click and create table - 'employee'
+4. On Columns section add columns:
+	- name: id, Data type: serial, check Not Null, check Primary Key  # serial is auto-created unique number for every new row
+	- name: name, Data type: character varying, length: 15
+	- name: salary, Data type: numeric, length: 10, scale: 2	  # scale is nuber of characters after decimal point
+		Add contraints:
+		- on constrains section, go to Ckeck subsection and add (+) line with name: 'salary' and Ckeck: 'salay > 0'
+	- name device_number, Data type: integer
+	- press Save button
+
+# Not NULL - cannot be empty field
+# Deafult - enters the default value if no external value is set
+# Primary Key - at least one field must be Primary Key
+
+5. Go to Schemas/Tables, right click and create table - 'departments'
+6. On Columns section add columns:
+	- name: id, Data type: serial, check Not Null, check Primary Key  # serial is auto-created unique number for every new row
+	- name: name, Data type: character varying, length: 50
+	- name code, Data type: character, length: 3
+	- name description, Data type: text
+	- name: email, Data type: character varying
+		Add contraints:
+		- on constrains section, go to Unique subsection and add (+) line with email
+			- go on Definition subsection and in 'Columns' field select 'email'
+	- press Save button
+
+7. Go to Schemas/Tables, right click and create table - 'issues'
+8. On Columns section add columns:
+	- name: id, Data type: serial, check Not Null, check Primary Key  # serial is auto-created unique number for every new row
+	- name: name, Data type: character varying, length: 150
+	- name date, Data type: date, Default: now()		# date is important part in every DB
+	- name start, Data type: timestamp without time zone	# date is important part in every DB
+	- press Save button
+
+type 'date' with 'timestamp without time zone' is UTC (Universal Timezone Coordinated: +/- 0)
+
+ALL POSTGRESQL DATA TYPES: https://www.postgresql.org/docs/current/datatype.html
+
+
+INSERTING DATA:
+
+1. In DB_name/Schemas/Tables/right click on specific table and select View/Edit Data/All Rolls
+2. Click Add roll (+) and add all required fields
+3. Click Save Data Changes (F6)
+
+
+DELETEING DATA:
+
+1. In DB_name/Schemas/Tables/right click on specific table and select View/Edit Data/All Rolls
+2. Select specific row and click on delete (Alt + D)
+3. Click Save Data Changes (F6)
+
+
+MODIFING DATA:
+
+1. In DB_name/Schemas/Tables/right click on specific table and select Properties
+2. Make Changes
+3. Press Save button
+
+
+DROPPING/DELETING TABLES:
+
+1. In DB_name/Schemas/Tables/right click on specific table and select Delete or Delete(Cascade)
+2. Confirm choice
+
+
+DROPPING/DELETEING DATABASE
+
+1. Right click on DB_name and select Delete or Delete(Force)
+2. Confirm choice
+
+
+
+
+
+
