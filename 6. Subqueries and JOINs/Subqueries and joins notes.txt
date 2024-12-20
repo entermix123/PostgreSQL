@@ -1,0 +1,103 @@
+CONTENT:
+
+1. JOINS
+▪ Gathering Data From Multiple Tables
+INNER JOIN GIVE US ONLI MATCHED DATA
+LEFT JOIN GIVE US ALL FROM LEFT AND MATCH AND NULL FOR ALL EMPTY
+RIGHT JOIN IS REVERSE OF LEFT
+OUTER JOIN IS EVERITHING RANDOM MATCHED
+
+2. Subqueries
+▪ Query Manipulation on Multiple Levels
+FILTERING BY DATA FROM ADDITIONAL QUERY
+
+3. Indices
+▪ Clustered and Non-Clustered Indices
+CLUSTERED INDEXES ARE MADE ON COLUMNS THAT ARE USED OFTEN AND DONT HAVE NULL VALUES
+CAN BE CREATED ON COMPOSITE CLUSTER example: concat(first_name, last_name)
+CREATE INDEXES BUT TAKES SPACE BUT REDUCE SEARCH TIME A LOT
+
+CLUSTERED INDECES - BALANCED TREES - CREATE POINTER TO THE NODE - TAKE MEMORY
+
+
+CREATING INDEXES:
+----------------------------------------------
+CREATE INDEX index_name_idx
+ON table_name(first_column, second_column);
+----------------------------------------------
+
+DELETING INDEXES:
+----------------------------------------------
+DROP INDEX index_name_idx
+----------------------------------------------
+
+
+
+
+
+
+1. Towns Addresses JOIN
+-----------------------------------------------
+SELECT
+    a.town_id,
+    t.name AS town_name,
+    a.address_text
+FROM
+    towns AS t
+        JOIN  addresses as a
+            --ON t.town_id = a.town_id
+            USING (town_id)
+WHERE t.name IN ('San Francisco', 'Sofia', 'Carnation')
+ORDER BY
+    t.town_id, a.address_id
+
+-----------------------------------------------
+
+
+2. Managers JOIN
+-----------------------------------------------
+SELECT
+    e.employee_id,
+    concat(e.first_name, ' ', e.last_name) AS full_name,
+    d.department_id,
+    d.name AS department_name
+FROM
+    employees as e
+    JOIN departments AS d
+    ON e.employee_id = d.manager_id
+ORDER BY employee_id
+LIMIT 5
+-----------------------------------------------
+
+
+3. Employees’ Projects JOIN
+-----------------------------------------------
+SELECT
+    e.employee_id,
+    concat(e.first_name, ' ', e.last_name) as full_name,
+    p.project_id,
+    p.name
+FROM
+    employees AS e
+    JOIN
+        employees_projects AS ep
+            ON e.employee_id = ep.employee_id
+	    --USING (employee_id)
+                JOIN projects AS p
+                    ON ep.project_id = p.project_id
+		    --USING (project_id)
+WHERE p.project_id = 1
+-----------------------------------------------
+
+
+4. Higher Salary SUBQUERY
+-----------------------------------------------
+SELECT
+    count(*)
+FROM
+    employees
+WHERE salary > (SELECT AVG(salary) FROM employees)
+-----------------------------------------------
+
+
+
