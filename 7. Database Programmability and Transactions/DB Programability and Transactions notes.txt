@@ -1,0 +1,572 @@
+CONTENT:
+
+1. USER-DEFINED FUNCTIONS
+
+▪ Extend the functionality of a PostgreSQL
+	▪ Write it once, call it any number of times
+	▪ Can be customized to fit specific requirements
+	▪ Break out complex logic into shorter code blocks
+▪ Functions can be:
+	▪ Scalar - returning a single value or NULL
+	▪ Table-valued - returning a table
+
+
+CREATE FUNCTION FOR FULL NAME:
+--FUNCTION MUST BE DROPPED IF PARRAMETERS ARE CHANGED
+
+SIMPLE FUNCTION
+-------------------------------------------------
+--Create or replace because we can execute multiple times
+CREATE OR REPLACE FUNCTION fn_full_name(VARCHAR, VARCHAR)
+RETURNS VARCHAR AS
+$$
+    DECLARE                             --declare variables
+    first_name ALIAS FOR $1;            --var1 for attr 1
+    last_name ALIAS FOR $2;             --var2 for attr 2
+    BEGIN                               --begin function logic
+        RETURN CONCAT(first_name, ' ', last_name);
+    END                                 --end function logic
+$$
+--procedure language pg postgre sql
+LANGUAGE plpgsql;
+
+
+--Call function
+SELECT fn_full_name('Danio', 'Shet');
+-------------------------------------------------
+
+
+MORE COMPLICATED FUNCTION
+-------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_full_name(first_name VARCHAR, last_name VARCHAR)
+RETURNS VARCHAR AS
+$$
+    DECLARE                             --declare variables
+    full_name VARCHAR;
+
+    BEGIN                               --begin function logic
+        IF first_name IS NULL AND last_name IS NULL THEN
+            full_name := NULL;
+        ELSIF first_name IS NULL THEN
+            full_name := last_name;
+        ELSIF last_name IS NULL THEN
+            full_name := first_name;
+        ELSE full_name := concat(first_name, ' ', last_name);
+        END IF;
+        RETURN full_name;
+    END                                 --end function logic
+$$
+--procedure language pg postgre sql
+LANGUAGE plpgsql;
+
+
+--Call function
+SELECT fn_full_name('Danio', 'Shet');
+-------------------------------------------------
+
+
+CREATE FUNCTION FOR FINDING CITY ID BY PARRAMETER CITY NAME
+-------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_get_city_id(city_name VARCHAR)
+RETURNS INT AS
+$$
+    DECLARE
+        city_id INT;
+    BEGIN
+        SELECT id FROM cities
+        WHERE name = city_name
+        INTO city_id;               --save value to city_id variable
+        RETURN  city_id;
+    END;
+$$
+LANGUAGE plpgsql;
+
+SELECT id FROM cities WHERE name = 'Vidin';
+-------------------------------------------------
+
+
+
+CREATE FUNCTION fn_get_city_id SIMPLE OPTION 
+-------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_get_city_id(city_name VARCHAR)
+RETURNS INT AS
+$$
+    DECLARE
+        city_id INT;
+    BEGIN
+        SELECT id INTO city_id FROM cities
+        WHERE name = city_name;
+        RETURN  city_id;
+    END;
+$$
+LANGUAGE plpgsql;
+
+SELECT id FROM cities WHERE name = 'Vidin';
+
+INSERT INTO persons(first_name, last_name, city_id)
+VALUES 
+    ('Lili', 'Pencheva', fn_get_city_id('Plovdiv'));
+-------------------------------------------------
+
+
+
+CREATE FUNCTION fn_get_city_id OPTION WITH IN AND OUT PARRAMETERS AND NO RETURN
+-------------------------------------------------
+DROP FUNCTION IF EXISTS fn_get_city_id;
+CREATE FUNCTION fn_get_city_id(
+    IN city_name VARCHAR,
+    OUT city_id INT,
+    OUT status INT      --output if error
+    ) AS
+$$
+    DECLARE
+        temp_id INT -- := 1;	-- := 1 is default value
+    BEGIN
+        SELECT id FROM cities WHERE name = city_name
+        INTO temp_id;
+        IF temp_id IS NULL THEN
+            SELECT 100 INTO status;     --code for error
+        ELSE
+            city_id := temp_id;
+            status := 0;
+            --SELECT temp_id, 0 INTO city_id, status;     --set city_id as temp_id and 0 to status code - no errors
+        end if;
+    END;
+$$
+LANGUAGE plpgsql;
+
+SELECT * FROM fn_get_city_id('Kaspichan');
+-------------------------------------------------
+
+
+▪ Examples of expected output:
+
+SELECT fn_count_employees_by_town('Sofia') AS count; RESULT => 3
+
+SELECT fn_count_employees_by_town('Berlin') AS count; RESULT => 1
+
+
+
+
+2. STORED PROCEDURES
+
+PROCEDURES MANIPULATE DATA IN DB ! ! !
+
+▪ Stored procedures allow some part of the logic to be removed from the application and stored in the RDBMS
+	▪ Can significantly cut down traffic on the network
+	▪ Improve the security of the database
+	▪ Encapsulate complex operations and logic, making it easier to manage and maintain the code
+▪ Stored procedures can be accessed by programs using different platforms and APIs
+
+
+IN FUNCTIONS WE CANNOT CALL PROCEDURES !!!
+-------------------------------------------------
+CREATE PROCEDURE sp_employees_count_by_work_experience()
+LANGUAGE plpgsql
+AS $$
+	DECLARE employees_count INT;
+BEGIN
+	SELECT COUNT(employee_id) INTO employees_count
+	FROM employees
+	WHERE DATE_PART('year', AGE(NOW(), hire_date)) < 18;
+	RAISE NOTICE 'Employees count: %', employees_count;
+END; $$;
+-------------------------------------------------
+▪ Executing a stored procedure by CALL
+	CALL sp_employees_count_by_work_experience();
+▪ DROP PROCEDURE
+	DROP PROCEDURE sp_employees_count_by_work_experience;
+
+
+
+NOTICES 1:
+-------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_test_func(first_name VARCHAR)
+RETURNS INT AS
+$$
+BEGIN
+    RAISE NOTICE '%', first_name;
+    RETURN NULL;
+END;
+$$
+LANGUAGE plpgsql;
+
+SELECT fn_test_func('Divak');	--ON OUTPUT TAB WE CAN SEE PRINTED NOTICE
+-------------------------------------------------
+
+
+NOTICES 2:
+-------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_test_func(first_name VARCHAR, last_name VARCHAR)
+RETURNS INT AS
+$$
+BEGIN
+    RAISE NOTICE 'My name is % %', first_name,last_name;
+    RETURN NULL;
+END;
+$$
+LANGUAGE plpgsql;
+
+SELECT fn_test_func('Divak', 'Divakov'); 	--ON OUTPUT TAB WE CAN SEE PRINTED NOTICE
+-------------------------------------------------
+
+
+
+
+
+
+3. TRANSACTIONS
+
+▪ Transaction is a sequence of actions (database operations) executed as a whole
+	▪ Either all of them succeed or fail as a whole
+▪ Example of transaction
+	▪ A bank transfer from one account to another (withdrawal & deposit operations)
+		▪ If either the withdrawal or the deposit operation fails the whole set of operations is canceled
+
+
+SYNTAX EXAMPLE FOR TRANSACTION:
+-------------------------------------------------
+-- start a transaction
+BEGIN;
+-- make a sequence of actions
+
+-- roll back the transaction
+ROLLBACK;
+
+-- commit the change
+COMMIT;
+-------------------------------------------------
+
+
+EXAMPLE FOR TRANSACTION:	NOT WORKING, CHECK !!!
+-------------------------------------------------
+CREATE OR REPLACE PROCEDURE p_transfer_money(
+    IN sender_id INT,
+    IN receiver_id INT,
+    IN transfer_amount INT,
+    IN sender_amount FLOAT,
+    OUT status VARCHAR      --NULL AS OUT PARAMETER
+) AS
+$$
+    DECLARE
+        sender_amount FLOAT;
+        receiver_amount FLOAT;
+        temp_value FLOAT;
+    BEGIN
+        SELECT b.amount FROM bank AS b WHERE id = sender_id INTO sender_amount;
+        IF sender_amount < transfer_amount THEN
+            status := 'Not enough money';
+            RETURN;
+            END IF;
+        SELECCT b.amount FROM bank AS b WHERE id = receiver_id INTO reveiver_amount;
+        UPDATE bank SET amount = amount - transfer_amount WHERE id = sender_id;
+        UPDATE bank SET amount = amount + transfer_amount WHERE id = receiver_id;
+        SELECCT b.amount FROM bank AS b WHERE id = receiver_id INTO temp_value;
+        IF sender_amount - transfer_amount <> temptemp_value THEN
+            status = 'Error in sender';
+            ROLLBACK ;
+        END IF;
+        SELECCT b.amount FROM bank AS b WHERE id = receiver_id INTO temp_value;
+        IF receiver_amount + transfer_amount <> temp_value THEN
+            status = 'Error in receiver';
+            ROLLBACK;
+        END IF;
+        status = 'Transfer done';
+        COMMIT;
+        RETURN;
+    END;
+$$
+LANGUAGE plpgsql;
+
+SELECT * FROM bank
+
+CALL p_transfer_money(2, 1, 500, NULL)  --NULL FOR STATUS
+-------------------------------------------------
+
+
+SAVEPOINT IS LIKE CHECKPOINT!
+
+ 
+
+
+4. TRIGGERS
+
+▪ Triggers - special user-defined functions invoked automatically whenever an event associated with a table occurs
+	▪ UPDATE, DELETE, INSERT, or TRUNCATE
+▪ We do not call triggers explicitly
+	▪ Triggers are attached to a table
+▪ PostgreSQL supports row-level and statement-level triggers
+
+
+EXAMPLES:
+
+CREATE TABLES
+-------------------------------------------------
+CREATE TABLE items(
+    id SERIAL PRIMARY KEY ,
+    status INT,
+    create_date DATE
+);
+
+CREATE TABLE items_logs(
+    id SERIAL PRIMARY KEY ,
+    status INT,
+    create_date DATE
+);
+-------------------------------------------------
+
+
+NEW - NEW DATA THAT WE INSERT NOW
+OLD - DATA ALREADY EXISTING IN THE TABLE
+
+CREATE FUNCTION FOR TRIGERS
+-------------------------------------------------
+CREATE OR REPLACE FUNCTION log_items()
+RETURNS TRIGGER AS
+$$
+    BEGIN
+        INSERT INTO items_logs(status, create_date)
+        VALUES
+            (new.status, new.create_date);
+        RETURN new;
+    END;
+$$
+LANGUAGE plpgsql;
+-------------------------------------------------
+
+CREATE TRIGERS
+-------------------------------------------------
+CREATE TRIGGER log_items_trigger
+AFTER INSERT ON items               --ACTIVATE TRIGGER AFTER THE INSERT, CAN BE BEFORE
+FOR EACH ROW                        --ITERATE TRUE EVERY ROW
+EXECUTE PROCEDURE log_items();      --can be EXECUTE FUNCTION
+-------------------------------------------------
+
+
+MAKE SOME INSERTS AND CHECK LOGS
+-------------------------------------------------
+INSERT INTO items(status, create_date)
+VALUES
+    (1, now()),
+    (2, now()),
+    (3, now()),
+    (4, now()),
+    (5, now());
+
+
+SELECT * FROM items_logs;
+-------------------------------------------------
+
+
+TRIGGER ALL EXAMPLE CODE 
+-------------------------------------------------
+--DROP TABLE IF EXISTS items;
+
+CREATE TABLE items(
+    id SERIAL PRIMARY KEY ,
+    status INT,
+    create_date DATE
+);
+
+CREATE TABLE items_logs(
+    id SERIAL PRIMARY KEY ,
+    status INT,
+    create_date DATE
+);
+
+CREATE OR REPLACE FUNCTION log_items()
+RETURNS TRIGGER AS
+$$
+    BEGIN
+        INSERT INTO items_logs(status, create_date)
+        VALUES
+            (new.status, new.create_date);
+        RETURN new;
+    END;
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER log_items_trigger
+AFTER INSERT ON items               --ACTIVATE TRIGGER AFTER THE INSERT, CAN BE BEFORE
+FOR EACH ROW                        --ITERATE TRUE EVERY ROW
+EXECUTE PROCEDURE log_items();      --can be EXECUTE FUNCTION
+
+
+INSERT INTO items(status, create_date)
+VALUES
+    (1, now()),
+    (2, now()),
+    (3, now()),
+    (4, now()),
+    (5, now());
+
+
+SELECT * FROM items_logs;
+-------------------------------------------------
+
+
+
+
+CREATE TRIGGER FOR SET LOG TABLE WITH 10 ROWS ONLY
+-------------------------------------------------
+CREATE OR REPLACE FUNCTION delete_last_item_log()       --SET SPECIFIC VOLUME FOR LOGS - 10
+RETURNS TRIGGER as
+$$
+    BEGIN
+        WHILE (SELECT count(*) FROM items_logs) > 10 LOOP                       --WHILE CYCLE
+            DELETE FROM items_logs WHERE id = (SELECT MIN(id) FROM items_logs); --DELETE ACTION
+        END LOOP;
+        RETURN new;
+    END;
+
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER clear_item_log
+AFTER INSERT ON items_logs
+FOR EACH STATEMENT
+EXECUTE PROCEDURE delete_last_item_log();
+
+SELECT * FROM items_logs;
+
+INSERT INTO items(status, create_date)
+VALUES
+    (1, now()),
+    (2, now()),
+    (3, now()),
+    (4, now()),
+    (5, now()),
+    (6, now()),
+    (7, now());
+-------------------------------------------------
+
+
+
+
+
+
+
+LAB:
+
+1. Count Employees by Town
+-------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_count_employees_by_town(town_name VARCHAR)
+RETURNS VARCHAR AS
+$$
+    DECLARE
+        town_count INT;
+    BEGIN
+        SELECT count(*)
+        FROM
+            employees as e
+        JOIN
+            addresses as a
+        USING (address_id)
+        JOIN
+            towns as t
+        USING (town_id)
+        WHERE t.name = town_name
+        INTO town_count;
+        RETURN town_count;
+    END
+$$
+LANGUAGE plpgsql;
+
+SELECT fn_count_employees_by_town('Sofia') as count;
+-------------------------------------------------
+
+
+2. Employees Promotion
+-------------------------------------------------
+CREATE OR REPLACE PROCEDURE sp_increase_salaries(department_name VARCHAR)
+AS
+$$
+BEGIN
+    UPDATE employees
+    SET salary = salary + salary * 0.05
+    WHERE department_id = (
+        SELECT
+           d.department_id
+        FROM
+            employees as e
+        JOIN
+            departments as d
+        USING (department_id)
+        WHERE name = department_name
+        GROUP BY d.department_id
+        );
+END
+$$
+LANGUAGE plpgsql;
+-------------------------------------------------
+
+
+
+3. Employees Promotion by ID
+-------------------------------------------------
+CREATE OR REPLACE PROCEDURE sp_increase_salary_by_id(id INT) AS
+$$
+    BEGIN
+        IF (SELECT salary FROM employees WHERE employee_id = id) IS NULL THEN
+            RETURN;
+        ELSE
+            UPDATE employees SET salary = salary + salary * 0.05 WHERE employee_id = id;
+        END IF;
+        COMMIT; --CAN BE WITHOUT COMMIT BECAUSE PROCEDURE AUTOMATICALLY COMMITS
+    END;
+$$
+LANGUAGE plpgsql;
+
+CALL sp_increase_salary_by_id(17);
+
+SELECT salary FROM employees WHERE employee_id = 17;
+-------------------------------------------------
+
+
+
+4. Triggered
+-------------------------------------------------
+-- DROP TABLE IF EXISTS deleted_employees;
+
+CREATE TABLE deleted_employees (
+    employee_id SERIAL PRIMARY KEY,
+    first_name VARCHAR(20),
+    last_name VARCHAR(20),
+    middle_name VARCHAR(20),
+    job_title VARCHAR(50),
+    department_id INT,
+    salary NUMERIC(19,4)
+    );
+
+CREATE OR REPLACE FUNCTION backup_fired_employees()
+RETURNS TRIGGER AS
+$$
+    BEGIN
+       INSERT INTO deleted_employees(
+            first_name,
+            last_name,
+            middle_name,
+            job_title,
+            department_id,
+            salary
+        )
+        VALUES (
+            old.first_name,
+            old.last_name,
+            old.middle_name,
+            old.job_title,
+            old.department_id,
+            old.salary
+        );
+       RETURN new;
+    END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE TRIGGER backup_employees
+AFTER DELETE ON employees
+FOR EACH ROW
+EXECUTE PROCEDURE backup_fired_employees();
+-------------------------------------------------
+
